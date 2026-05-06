@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obyvatelé mokřadů – LIFE in Salt Marshes</title>
+<!--
+=======================================================================
+  LIFE in Salt Marshes · WS1 · Embed pro Esri ArcGIS StoryMaps
+  Verze: base64 – vše v jednom souboru, žádné externí závislosti
+=======================================================================
+
+  JAK NAHRADIT OBRÁZKY:
+  ─────────────────────
+  1. Otevři tento soubor v textovém editoru (VS Code, Notepad++…)
+  2. Najdi komentář: <!-- IMG: kunka-obecna -->
+  3. Níže je atribut  src="data:image/svg+xml;base64,..."
+  4. Celou hodnotu src nahraď base64 zakódovanou fotografií:
+
+     a) Převeď fotografii na base64 zde:
+        https://www.base64-image.de/
+        nebo spusť v terminálu:
+        python3 -c "import base64; print('data:image/jpeg;base64,'+base64.b64encode(open('kunka.jpg','rb').read()).decode())"
+
+     b) Výsledný řetězec vlož jako novou hodnotu src:
+        src="data:image/jpeg;base64,/9j/4AAQ..."
+
+  DOPORUČENÉ VELIKOSTI FOTOGRAFIÍ:
+  ─────────────────────────────────
+  • Max. 800 × 600 px (card je 200px vysoká, stačí menší)
+  • Formát JPG komprimovaný na 60–70 % → cca 40–80 kB na foto
+  • Celý HTML soubor pak bude cca 500 kB – ArcGIS Online to zvládne
+
+  NAHRÁNÍ DO ARCGIS ONLINE:
+  ──────────────────────────
+  1. ArcGIS Online → Content → New Item → From my computer
+  2. Vyber tento .html soubor
+  3. Nastav sdílení: Public
+  4. Otevři item → klikni "View"
+  5. Zkopíruj URL a vlož do StoryMap → blok Embed → Embed a webpage
+  6. V nastavení Embed bloku nastav výšku: 920 px
+
+=======================================================================
+-->
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --water: #1a5e7a;
+    --water-light: #3da4c0;
+    --text: #1a2530;
+    --muted: #5a7080;
+    --white: #fafcfd;
+  }
+  html, body {
+    background: transparent;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    padding: 0 0 48px;
+  }
+
+  /* ── INTRO ── */
+  .section-intro {
+    text-align: center;
+    padding: 48px 24px 36px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .section-label {
+    display: inline-block;
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--water-light);
+    padding-left: 22px; position: relative; margin-bottom: 10px;
+  }
+  .section-label::before {
+    content: ""; position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 1.5px; background: var(--water-light);
+  }
+  .section-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--water); line-height: 1.2; margin-bottom: 14px;
+  }
+  .section-desc {
+    font-size: 0.97rem; color: var(--muted);
+    line-height: 1.7; font-weight: 300;
+  }
+
+  /* ── GRID ── */
+  .species-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  @media (max-width: 860px) { .species-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 540px) { .species-grid { grid-template-columns: 1fr; } }
+
+  /* ── CARD ── */
+  .species-card {
+    background: var(--white);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(10,42,61,.09);
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease;
+    opacity: 0; transform: translateY(28px);
+    animation: cardReveal .65s ease forwards;
+  }
+  .species-card:nth-child(1){animation-delay:.05s}
+  .species-card:nth-child(2){animation-delay:.15s}
+  .species-card:nth-child(3){animation-delay:.25s}
+  .species-card:nth-child(4){animation-delay:.35s}
+  .species-card:nth-child(5){animation-delay:.45s}
+  .species-card:nth-child(6){animation-delay:.55s}
+  @keyframes cardReveal { to { opacity:1; transform:translateY(0); } }
+  .species-card:hover {
+    transform: translateY(-7px) scale(1.01);
+    box-shadow: 0 16px 48px rgba(10,42,61,.16);
+  }
+
+  /* ── PHOTO ── */
+  .card-img {
+    position: relative; height: 200px;
+    overflow: hidden;
+  }
+  .card-img img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: transform .6s ease;
+  }
+  .species-card:hover .card-img img { transform: scale(1.07); }
+
+  /* ── STATUS BADGE ── */
+  .status-badge {
+    position: absolute; top: 12px; right: 12px;
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .status-EN { background: rgba(254,226,226,.92); color: #991b1b; }
+  .status-NT { background: rgba(254,249,195,.92); color: #854d0e; }
+  .status-VU { background: rgba(255,237,213,.92); color: #9a3412; }
+  .status-CR { background: rgba(243,232,255,.92); color: #6b21a8; }
+
+  /* ── BODY ── */
+  .card-body { padding: 20px 22px 24px; }
+  .card-sci {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic; font-size: .82rem;
+    color: var(--water-light); margin-bottom: 3px;
+  }
+  .card-name {
+    font-size: 1.18rem; font-weight: 700;
+    color: var(--water); margin-bottom: 12px; line-height: 1.2;
+  }
+  .card-desc {
+    font-size: .87rem; color: var(--muted);
+    line-height: 1.65; margin-bottom: 14px; font-weight: 300;
+  }
+  .card-quote {
+    background: #f0f7fb;
+    border-left: 3px solid var(--water-light);
+    border-radius: 0 10px 10px 0;
+    padding: 11px 14px;
+    font-size: .84rem; font-style: italic;
+    color: var(--water); line-height: 1.55; margin-bottom: 14px;
+  }
+  .card-localities { display: flex; flex-wrap: wrap; gap: 5px; }
+  .loc-tag {
+    font-size: .68rem; font-weight: 600;
+    background: rgba(61,164,192,.1);
+    color: var(--water);
+    padding: 3px 8px; border-radius: 10px;
+    border: 1px solid rgba(61,164,192,.2);
+  }
+</style>
+</head>
+<body>
+
+<div class="section-intro">
+  <div class="section-label">Obyvatelé mokřadů</div>
+  <h2 class="section-title">Kdo tu žije a co potřebuje</h2>
+  <p class="section-desc">Mokřady a slaniska jsou domovem vzácných druhů, z nichž mnohé jsou vázány výhradně na specifické podmínky tohoto prostředí. Jejich přítomnost nebo nepřítomnost vypovídá o zdraví celého ekosystému.</p>
+</div>
+
+<div class="species-grid">
+
+  <!-- ═══ KARTA 1 ═══════════════════════════════════════════════
+       Druh: Kuňka obecná (Bombina bombina)
+       IMG:  Doporučený název souboru: kunka-obecna.jpg
+       ─────────────────────────────────────────────────────────── -->
+  <div class="species-card">
+    <div class="card-img">
+      <img
+        id="img-kunka"
+        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGQzYjJmIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWE1ZTdhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfkLg8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYThkOGU4IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhOGQ4ZTgiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4="
+        alt="Kuňka obecná – Bombina bombina"
+      >
+      <!--
+        NAHRADIT BASE64 FOTOGRAFIÍ:
+        1. Převeď foto na base64: https://www.base64-image.de/
+        2. Nahraď celou hodnotu src výše řetězcem:
+           data:image/jpeg;base64,/9j/4AAQ...
+      -->
+      <span class="status-badge status-EN">EN – ohrožený</span>
+    </div>
+    <div class="card-body">
+      <div class="card-sci">Bombina bombina</div>
+      <div class="card-name">Kuňka obecná</div>
+      <div class="card-desc">Malá žába s ohnivě oranžovým břichem. Klíčový indikátor zdravých mělkých tůní bez predačních ryb. Preferuje vody s přirozeně kolísající hladinou.</div>
+      <div class="card-quote">„Potřebuji mělké tůně s pozvolnými břehy, dost světla a vodu bez ryb. Kde voda kolísá a žije."</div>
+      <div class="card-localities">
+        <span class="loc-tag">Vrbovecký rybník</span>
+        <span class="loc-tag">Trávní dvůr</span>
+        <span class="loc-tag">Novosedly</span>
+        <span class="loc-tag">+6 lokalit</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KARTA 2 ═══════════════════════════════════════════════
+       Druh: Čolek obecný (Lissotriton vulgaris)
+       IMG:  Doporučený název souboru: colek-obecny.jpg
+       ─────────────────────────────────────────────────────────── -->
+  <div class="species-card">
+    <div class="card-img">
+      <img
+        id="img-colek"
+        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQ0YTFlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNGE3YzNmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfpo48L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzJlOGIyIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjMmU4YjIiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4="
+        alt="Čolek obecný – Lissotriton vulgaris"
+      >
+      <span class="status-badge status-VU">VU – zranitelný</span>
+    </div>
+    <div class="card-body">
+      <div class="card-sci">Lissotriton vulgaris</div>
+      <div class="card-name">Čolek obecný</div>
+      <div class="card-desc">Nenápadný obojživelník vázaný na čisté vody s bohatou vodní vegetací. Vajíčka klade jednotlivě na listy vodních rostlin.</div>
+      <div class="card-quote">„Potřebuji vodní rostliny, na které mohu klást vajíčka, a břehy, ke kterým se mohu bezpečně dostat."</div>
+      <div class="card-localities">
+        <span class="loc-tag">Vrbovecký rybník</span>
+        <span class="loc-tag">Novosedly</span>
+        <span class="loc-tag">Trkmanec</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KARTA 3 ═══════════════════════════════════════════════
+       Druh: Čolek dunajský (Triturus dobrogicus)
+       IMG:  Doporučený název souboru: colek-dunajsky.jpg
+       ─────────────────────────────────────────────────────────── -->
+  <div class="species-card">
+    <div class="card-img">
+      <img
+        id="img-colek-dunajsky"
+        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWEzMDUwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQ1NTgwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfpo48L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYThjOGYwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhOGM4ZjAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4="
+        alt="Čolek dunajský – Triturus dobrogicus"
+      >
+      <span class="status-badge status-CR">CR – kriticky ohrožený</span>
+    </div>
+    <div class="card-body">
+      <div class="card-sci">Triturus dobrogicus</div>
+      <div class="card-name">Čolek dunajský</div>
+      <div class="card-desc">Jeden z nejvzácnějších čolků ČR. Výskyt vázán na zachovalé lužní lesy s trvalými tůněmi. Přítomnost na Vypálenkách je klíčovým indikátorem úspěchu.</div>
+      <div class="card-quote">„Jsem vzácný host. Moje přítomnost na Vypálenkách je znamením, že se tu věci dělají správně."</div>
+      <div class="card-localities">
+        <span class="loc-tag">Vypálenky</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KARTA 4 ═══════════════════════════════════════════════
+       Druh: Blatnice skvrnitá (Pelobates fuscus)
+       IMG:  Doporučený název souboru: blatnice-skvrnita.jpg
+       ─────────────────────────────────────────────────────────── -->
+  <div class="species-card">
+    <div class="card-img">
+      <img
+        id="img-blatnice"
+        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojM2EyYTEwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNmE1MDIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfkIo8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZThjODgwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNlOGM4ODAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4="
+        alt="Blatnice skvrnitá – Pelobates fuscus"
+      >
+      <span class="status-badge status-NT">NT – téměř ohrožený</span>
+    </div>
+    <div class="card-body">
+      <div class="card-sci">Pelobates fuscus</div>
+      <div class="card-name">Blatnice skvrnitá</div>
+      <div class="card-desc">Noční žába, která se zahrabává do měkké půdy. Závisí na periodických tůních a písčitém substrátu. Její pulce jsou jedni z největších u evropských žab.</div>
+      <div class="card-quote">„Mé pulce potřebují tůně, které nevysychají příliš brzy. Celé stovky jich přežily díky obnovené vodě."</div>
+      <div class="card-localities">
+        <span class="loc-tag">Husí pastviště</span>
+        <span class="loc-tag">Novosedly</span>
+        <span class="loc-tag">Kosteliska</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KARTA 5 ═══════════════════════════════════════════════
+       Druh: Šídlatka brvnatá / Šidélko huňaté (vážky)
+       IMG:  Doporučený název souboru: sidlatka-brvnata.jpg
+       ─────────────────────────────────────────────────────────── -->
+  <div class="species-card">
+    <div class="card-img">
+      <img
+        id="img-sidlatka"
+        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGEyMDQwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWE0YTdhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfqrI8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTBjMGU4IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5MGMwZTgiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4="
+        alt="Šídlatka brvnatá – Lestes barbarus"
+      >
+      <span class="status-badge status-NT">NT – téměř ohrožený</span>
+    </div>
+    <div class="card-body">
+      <div class="card-sci">Lestes barbarus / Coenagrion scitulum</div>
+      <div class="card-name">Šídlatka brvnatá &amp; Šidélko huňaté</div>
+      <div class="card-desc">Vzácné vážky vázané na extenzivně obhospodařované mokřady s pestrým vodním porostem a otevřenou hladinou.</div>
+      <div class="card-quote">„Nacházíme se tam, kde se voda setkává se sluncem a travou. Naše vajíčka potřebují správné rostliny."</div>
+      <div class="card-localities">
+        <span class="loc-tag">Hevlínské jezero</span>
+        <span class="loc-tag">Novosedly</span>
+        <span class="loc-tag">Vrbovecký rybník</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ KARTA 6 ═══════════════════════════════════════════════
+       Druh: Pijavka lékařská (Hirudo medicinalis)
+       IMG:  Doporučený název souboru: pijavka-lekarska.jpg
+       ─────────────────────────────────────────────────────────── -->
+  <div class="species-card">
+    <div class="card-img">
+      <img
+        id="img-pijavka"
+        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmExYTBhIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNTAzMDIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfqrE8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzhhMDcwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjOGEwNzAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4="
+        alt="Pijavka lékařská – Hirudo medicinalis"
+      >
+      <span class="status-badge status-EN">EN – ohrožený</span>
+    </div>
+    <div class="card-body">
+      <div class="card-sci">Hirudo medicinalis</div>
+      <div class="card-name">Pijavka lékařská</div>
+      <div class="card-desc">Historicky hojná, dnes vzácná. Závisí na čistých stojatých vodách s obojživelníky jako hostiteli. Silný bioindikátor čistoty vody.</div>
+      <div class="card-quote">„Čistá voda, obojživelníci a klid — to jsou mé tři přání. Tam, kde je mě vidět, je mokřad zdravý."</div>
+      <div class="card-localities">
+        <span class="loc-tag">Hevlínské jezero</span>
+        <span class="loc-tag">Kosteliska</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
