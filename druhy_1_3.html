@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Obyvatele mokradu</title>
+<style>*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --water: #1a5e7a; --wl: #3da4c0; --text: #1a2530; --muted: #5a7080; --white: #fafcfd; }
+html, body { background: transparent; font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; color: var(--text); overflow: hidden; }
+.grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; padding: 18px; }
+.card { background: var(--white); border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px rgba(10,42,61,.09); transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s; opacity:0; transform:translateY(22px); animation: cr .6s ease forwards; }
+.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.15s}.card:nth-child(3){animation-delay:.25s}
+@keyframes cr { to { opacity:1; transform:translateY(0); } }
+.card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 14px 40px rgba(10,42,61,.15); }
+.cimg { position:relative; height:185px; overflow:hidden; }
+.cimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .6s; }
+.card:hover .cimg img { transform:scale(1.07); }
+.badge { position:absolute; top:10px; right:10px; font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:3px 9px; border-radius:20px; backdrop-filter:blur(6px); }
+.EN { background:rgba(254,226,226,.92); color:#991b1b; }
+.NT { background:rgba(254,249,195,.92); color:#854d0e; }
+.VU { background:rgba(255,237,213,.92); color:#9a3412; }
+.CR { background:rgba(243,232,255,.92); color:#6b21a8; }
+.body { padding:16px 18px 18px; }
+.sci { font-family:Georgia,serif; font-style:italic; font-size:.78rem; color:var(--wl); margin-bottom:2px; }
+.name { font-size:1.08rem; font-weight:700; color:var(--water); margin-bottom:10px; line-height:1.2; }
+.desc { font-size:.82rem; color:var(--muted); line-height:1.6; margin-bottom:11px; }
+.quote { background:#f0f7fb; border-left:3px solid var(--wl); border-radius:0 8px 8px 0; padding:9px 12px; font-size:.8rem; font-style:italic; color:var(--water); line-height:1.5; margin-bottom:11px; }
+.locs { display:flex; flex-wrap:wrap; gap:4px; }
+.loc { font-size:.64rem; font-weight:600; background:rgba(61,164,192,.1); color:var(--water); padding:2px 7px; border-radius:9px; border:1px solid rgba(61,164,192,.2); }</style>
+</head>
+<body>
+<div class="grid">
+  <div class="card">
+    <div class="cimg"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGQzYjJmIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWE1ZTdhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfkLg8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYThkOGU4IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhOGQ4ZTgiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Kuňka obecná">
+    <span class="badge EN">EN – ohrožený</span></div>
+    <div class="body">
+      <div class="sci">Bombina bombina</div>
+      <div class="name">Kuňka obecná</div>
+      <div class="desc">Malá žába s ohnivě oranžovým břichem. Klíčový indikátor zdravých mělkých tůní bez predačních ryb.</div>
+      <div class="quote">Potřebuji mělké tůně s pozvolnými břehy, dost světla a vodu bez ryb.</div>
+      <div class="locs"><span class="loc">Vrbovecký rybník</span><span class="loc">Trávní dvůr</span><span class="loc">Novosedly</span><span class="loc">Trkmanec-Rybníčky</span><span class="loc">Husí pastviště</span><span class="loc">Hevlínské jezero</span><span class="loc">Dobré Pole</span><span class="loc">Kosteliska</span><span class="loc">Vypálenky</span></div>
+    </div>
+  </div>  <div class="card">
+    <div class="cimg"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQ0YTFlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNGE3YzNmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfpo48L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzJlOGIyIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjMmU4YjIiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Čolek obecný">
+    <span class="badge VU">VU – zranitelný</span></div>
+    <div class="body">
+      <div class="sci">Lissotriton vulgaris</div>
+      <div class="name">Čolek obecný</div>
+      <div class="desc">Nenzápadný obojkživelník vázaný na čisté vody s bohatou vodní vegetací. Vajíčka klade na listy rostlin.</div>
+      <div class="quote">Potřebuji vodní rostliny, na které mohu klást vajíčka, a břehy ke kterým se dostanu.</div>
+      <div class="locs"><span class="loc">Vrbovecký rybník</span><span class="loc">Novosedly</span><span class="loc">Trkmanec-Rybníčky</span><span class="loc">Kosteliska</span><span class="loc">Vypálenky</span></div>
+    </div>
+  </div>  <div class="card">
+    <div class="cimg"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWEzMDUwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQ1NTgwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfpo48L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYThjOGYwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhOGM4ZjAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Čolek dunajský">
+    <span class="badge CR">CR – kriticky ohrožený</span></div>
+    <div class="body">
+      <div class="sci">Triturus dobrogicus</div>
+      <div class="name">Čolek dunajský</div>
+      <div class="desc">Jeden z nejvzácnějších čolků ČR. Vázán na lužní lesy s trvalými tůnněmi. Přítomnost na Vypálenkách je klíčovým úspěchem projektu.</div>
+      <div class="quote">Jsem vzácný host. Moje přítomnost na Vypálenkách je znamením, že se tu věci dělají správně.</div>
+      <div class="locs"><span class="loc">Vypálenky</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
