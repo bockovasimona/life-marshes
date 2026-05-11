@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obyvatele mokradu – LIFE in Salt Marshes</title>
+<style>
+/*
+==============================================
+  LIFE in Salt Marshes – Kartičky živočichů
+  Fonty:    Segoe UI / Helvetica Neue / Arial (systémové, žádný download)
+            Georgia / Times New Roman (systémové, pro vědecké názvy)
+  Barvy:
+    --water       #1a5e7a  (tmavá modrá – nadpisy)
+    --wl          #3da4c0  (světlá modrá – akcenty, linka, sci názvy)
+    --text        #1a2530  (téměř černá – hlavní text)
+    --muted       #5a7080  (šedá – popisný text)
+    --white       #fafcfd  (téměř bílá – pozadí karet)
+    Status badges:
+    EN (ohrožený)          pozadí #fee2e2  text #991b1b
+    VU (zranitelný)        pozadí #ffedd5  text #9a3412
+    CR (kriticky ohrožený) pozadí #f3e8ff  text #6b21a8
+    NT (téměř ohrožený)    pozadí #fefce8  text #854d0e
+==============================================
+*/
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --water: #1a5e7a;
+  --wl:    #3da4c0;
+  --text:  #1a2530;
+  --muted: #5a7080;
+  --white: #fafcfd;
+}
+
+html, body {
+  background: transparent;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+  /* overflow-y auto – postMessage zajistí správnou výšku v iframe */
+  overflow-y: auto;
+}
+
+/* ── GRID – responzivní ── */
+.grid {
+  display: grid;
+  /* Desktop: 3 sloupce | Tablet: 2 | Mobil: 1 */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  padding: 18px;
+}
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 14px; }
+}
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+}
+
+/* ── KARTA ── */
+.card {
+  background: var(--white);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(10,42,61,.09);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+  opacity: 0;
+  transform: translateY(22px);
+  animation: cr .6s ease forwards;
+}
+.card:nth-child(1){ animation-delay: .05s }
+.card:nth-child(2){ animation-delay: .15s }
+.card:nth-child(3){ animation-delay: .25s }
+@keyframes cr { to { opacity:1; transform:translateY(0); } }
+
+/* Hover jen na zařízeních s myší */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 14px 40px rgba(10,42,61,.15);
+  }
+  .card:hover .cimg img { transform: scale(1.07); }
+}
+
+/* ── FOTO ── */
+.cimg {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+@media (max-width: 520px) {
+  .cimg { height: 220px; }
+}
+.cimg img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  transition: transform .6s;
+}
+
+/* ── STATUS BADGE ── */
+.badge {
+  position: absolute; top: 10px; right: 10px;
+  font-size: .62rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+.EN { background: rgba(254,226,226,.92); color: #991b1b; }
+.NT { background: rgba(254,249,195,.92); color: #854d0e; }
+.VU { background: rgba(255,237,213,.92); color: #9a3412; }
+.CR { background: rgba(243,232,255,.92); color: #6b21a8; }
+
+/* ── OBSAH KARTY ── */
+.body { padding: 16px 18px 18px; }
+
+.sci {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: .8rem;
+  color: var(--wl);
+  margin-bottom: 3px;
+}
+@media (max-width: 520px) { .sci { font-size: .85rem; } }
+
+.name {
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--water);
+  margin-bottom: 10px; line-height: 1.25;
+}
+@media (max-width: 520px) { .name { font-size: 1.2rem; } }
+
+.desc {
+  font-size: .84rem; color: var(--muted);
+  line-height: 1.65; margin-bottom: 11px;
+}
+@media (max-width: 520px) { .desc { font-size: .9rem; } }
+
+.quote {
+  background: #f0f7fb;
+  border-left: 3px solid var(--wl);
+  border-radius: 0 8px 8px 0;
+  padding: 9px 12px;
+  font-size: .82rem; font-style: italic;
+  color: var(--water); line-height: 1.5;
+  margin-bottom: 12px;
+}
+@media (max-width: 520px) { .quote { font-size: .88rem; } }
+
+.locs { display: flex; flex-wrap: wrap; gap: 5px; }
+.loc {
+  font-size: .65rem; font-weight: 600;
+  background: rgba(61,164,192,.1);
+  color: var(--water);
+  padding: 3px 8px; border-radius: 9px;
+  border: 1px solid rgba(61,164,192,.22);
+}
+@media (max-width: 520px) { .loc { font-size: .72rem; padding: 4px 9px; } }
+</style>
+<script>
+function reportHeight() {
+  var h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ type: 'embed-size', height: h }, '*');
+  window.parent.postMessage(JSON.stringify({ src: window.location.href, context: 'iframe.resize', height: h }), '*');
+}
+window.addEventListener('load', function(){ setTimeout(reportHeight,150); setTimeout(reportHeight,600); });
+window.addEventListener('resize', reportHeight);
+</script>
+</head>
+<body>
+<div class="grid">
+  <div class="card">
+    <div class="cimg">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojM2EyYTEwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNmE1MDIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfkIo8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZThjODgwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNlOGM4ODAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Blatnice skvrnitá">
+      <!--
+        JAK NAHRADIT FOTOGRAFII:
+        1. Jdi na https://www.base64-image.de/
+        2. Nahraj fotku (doporucena velikost max 800x600px, JPG 70%)
+        3. Klikni "Copy image to clipboard" – zkopirujes retezec data:image/jpeg;base64,...
+        4. Nahrad cely obsah atributu src= timto retezcem
+        5. Uloz soubor a nahraj na GitHub
+      -->
+      <span class="badge NT">NT – téměř ohrožený</span>
+    </div>
+    <div class="body">
+      <div class="sci">Pelobates fuscus</div>
+      <div class="name">Blatnice skvrnitá</div>
+      <div class="desc">Noční žába zahrabávající se do půdy. Závisí na periodických tůních a písčitém substrátu.</div>
+      <div class="quote">Mé pulce potřebují tůně které nevysychají příliš brzy. Celé stovky jich přežily díky obnovené vodě.</div>
+      <div class="locs"><span class="loc">Husí pastviště</span><span class="loc">Novosedly</span><span class="loc">Kosteliska</span><span class="loc">Trávní dvůr</span><span class="loc">Trkmanec-Rybníčky</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cimg">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGEyMDQwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWE0YTdhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfqrI8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTBjMGU4IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5MGMwZTgiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Šídlatka brvnatá &amp; Šidélko huňaté">
+      <!--
+        JAK NAHRADIT FOTOGRAFII:
+        1. Jdi na https://www.base64-image.de/
+        2. Nahraj fotku (doporucena velikost max 800x600px, JPG 70%)
+        3. Klikni "Copy image to clipboard" – zkopirujes retezec data:image/jpeg;base64,...
+        4. Nahrad cely obsah atributu src= timto retezcem
+        5. Uloz soubor a nahraj na GitHub
+      -->
+      <span class="badge NT">NT – téměř ohrožený</span>
+    </div>
+    <div class="body">
+      <div class="sci">Lestes barbarus / Coenagrion scitulum</div>
+      <div class="name">Šídlatka brvnatá &amp; Šidélko huňaté</div>
+      <div class="desc">Vzácné vážky vázané na extenzivně obhospodařované mokřady s pestrým vodním porostem.</div>
+      <div class="quote">Nacházíme se tam, kde se voda setkává se sluncem a travou. Naše vajíčka potřebují správné rostliny.</div>
+      <div class="locs"><span class="loc">Hevlínské jezero</span><span class="loc">Novosedly</span><span class="loc">Vrbovecký rybník</span><span class="loc">Kosteliska</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cimg">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmExYTBhIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNTAzMDIwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfqrE8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzhhMDcwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjOGEwNzAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Pijavka lékařská">
+      <!--
+        JAK NAHRADIT FOTOGRAFII:
+        1. Jdi na https://www.base64-image.de/
+        2. Nahraj fotku (doporucena velikost max 800x600px, JPG 70%)
+        3. Klikni "Copy image to clipboard" – zkopirujes retezec data:image/jpeg;base64,...
+        4. Nahrad cely obsah atributu src= timto retezcem
+        5. Uloz soubor a nahraj na GitHub
+      -->
+      <span class="badge EN">EN – ohrožený</span>
+    </div>
+    <div class="body">
+      <div class="sci">Hirudo medicinalis</div>
+      <div class="name">Pijavka lékařská</div>
+      <div class="desc">Historicky hojná, dnes vzácná. Závisí na čistých stojatých vodách s obojkživelnníky jako hostiteli.</div>
+      <div class="quote">Čistá voda, obojkživelnníci a klid — to jsou mé tři přání. Tam kde je mě vidět, je mokřad zdravý.</div>
+      <div class="locs"><span class="loc">Hevlínské jezero</span><span class="loc">Kosteliska</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
