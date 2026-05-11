@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obyvatele mokradu 1</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --water:#1a5e7a; --wl:#3da4c0; --muted:#5a7080; --white:#fafcfd; }
+html, body { background: transparent; font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; overflow-x: hidden; }
+
+/* Grid – sloupce řídí JavaScript podle skutečné šířky iframu */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* výchozí: 3 sloupce */
+  gap: 18px;
+  padding: 18px;
+}
+/* JS přidá třídu .cols-2 nebo .cols-1 na .grid */
+.grid.cols-2 { grid-template-columns: repeat(2, 1fr); gap: 14px; padding: 14px; }
+.grid.cols-1 { grid-template-columns: 1fr; gap: 12px; padding: 12px; }
+
+.card {
+  background: var(--white); border-radius: 18px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(10,42,61,.09);
+  opacity: 0; transform: translateY(22px);
+  animation: cr .6s ease forwards;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+}
+@keyframes cr { to { opacity:1; transform:translateY(0); } }
+.card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 14px 40px rgba(10,42,61,.15); }
+.card:hover .cimg img { transform: scale(1.07); }
+
+.cimg { position:relative; height:200px; overflow:hidden; }
+.cimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .6s; }
+
+.badge {
+  position:absolute; top:10px; right:10px;
+  font-size:.62rem; font-weight:700; letter-spacing:.07em;
+  text-transform:uppercase; padding:3px 9px; border-radius:20px;
+  backdrop-filter:blur(6px); white-space:nowrap;
+}
+.EN { background:rgba(254,226,226,.92); color:#991b1b; }
+.VU { background:rgba(255,237,213,.92); color:#9a3412; }
+.CR { background:rgba(243,232,255,.92); color:#6b21a8; }
+.NT { background:rgba(254,249,195,.92); color:#854d0e; }
+
+.body { padding:16px 18px 18px; }
+.sci  { font-family:Georgia,serif; font-style:italic; font-size:.8rem; color:var(--wl); margin-bottom:3px; }
+.name { font-size:1.08rem; font-weight:700; color:var(--water); margin-bottom:10px; line-height:1.25; }
+.desc { font-size:.84rem; color:var(--muted); line-height:1.65; margin-bottom:11px; }
+.quote {
+  background:#f0f7fb; border-left:3px solid var(--wl);
+  border-radius:0 8px 8px 0; padding:9px 12px;
+  font-size:.82rem; font-style:italic; color:var(--water);
+  line-height:1.5; margin-bottom:12px;
+}
+.locs { display:flex; flex-wrap:wrap; gap:5px; }
+.loc {
+  font-size:.65rem; font-weight:600;
+  background:rgba(61,164,192,.1); color:var(--water);
+  padding:3px 8px; border-radius:9px;
+  border:1px solid rgba(61,164,192,.22);
+}
+
+/* Větší text na úzkém layoutu */
+.grid.cols-1 .sci  { font-size:.88rem; }
+.grid.cols-1 .name { font-size:1.18rem; }
+.grid.cols-1 .desc { font-size:.9rem; }
+.grid.cols-1 .quote { font-size:.88rem; }
+.grid.cols-1 .loc  { font-size:.72rem; padding:4px 9px; }
+.grid.cols-1 .cimg { height:220px; }
+</style>
+</head>
+<body>
+<div class="grid" id="grid">
+<div class="card" style="animation-delay:0.05s">
+  <div class="cimg">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGQzYjJmIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWE1ZTdhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfkLg8L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYThkOGU4IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhOGQ4ZTgiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Kuňka obecná">
+    <span class="badge EN">EN – ohrožený</span>
+  </div>
+  <div class="body">
+    <div class="sci">Bombina bombina</div>
+    <div class="name">Kuňka obecná</div>
+    <div class="desc">Malá žába s ohnivě oranžovým břichem. Klíčový indikátor zdravých mělkých tůní bez predačních ryb.</div>
+    <div class="quote">Potřebuji mělké tůně s pozvolnými břehy, dost světla a vodu bez ryb.</div>
+    <div class="locs"><span class="loc">Vrbovecký rybník</span><span class="loc">Trávní dvůr</span><span class="loc">Novosedly</span><span class="loc">Trkmanec-Rybníčky</span><span class="loc">Husí pastviště</span><span class="loc">Hevlínské jezero</span><span class="loc">Dobré Pole</span><span class="loc">Kosteliska</span><span class="loc">Vypálenky</span></div>
+  </div>
+</div>
+<div class="card" style="animation-delay:0.15000000000000002s">
+  <div class="cimg">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQ0YTFlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNGE3YzNmIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfpo48L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzJlOGIyIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjMmU4YjIiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Čolek obecný">
+    <span class="badge VU">VU – zranitelný</span>
+  </div>
+  <div class="body">
+    <div class="sci">Lissotriton vulgaris</div>
+    <div class="name">Čolek obecný</div>
+    <div class="desc">Nenapádný obojkživelník vázaný na čisté vody s bohatou vodní vegetací. Vajíčka klade na listy rostlin.</div>
+    <div class="quote">Potřebuji vodní rostliny, na které mohu klást vajíčka, a břehy ke kterým se dostanu.</div>
+    <div class="locs"><span class="loc">Vrbovecký rybník</span><span class="loc">Novosedly</span><span class="loc">Trkmanec-Rybníčky</span><span class="loc">Kosteliska</span><span class="loc">Vypálenky</span></div>
+  </div>
+</div>
+<div class="card" style="animation-delay:0.25s">
+  <div class="cimg">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgNjAwIDQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMWEzMDUwIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQ1NTgwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48dGV4dCB4PSIzMDAiIHk9IjE4MiIgZm9udC1zaXplPSIxMDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPvCfpo48L3RleHQ+PHJlY3QgeD0iMTMwIiB5PSIyNjYiIHdpZHRoPSIzNDAiIGhlaWdodD0iMzgiIHJ4PSIxOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYThjOGYwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC41Ii8+PHRleHQgeD0iMzAwIiB5PSIyOTEiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhOGM4ZjAiIG9wYWNpdHk9IjAuNjUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBsZXR0ZXItc3BhY2luZz0iMiIgZm9udC13ZWlnaHQ9IjcwMCI+TkFIUkFESVQgRk9UT0dSQUZJSTwvdGV4dD48L3N2Zz4=" alt="Čolek dunajský">
+    <span class="badge CR">CR – kriticky ohrožený</span>
+  </div>
+  <div class="body">
+    <div class="sci">Triturus dobrogicus</div>
+    <div class="name">Čolek dunajský</div>
+    <div class="desc">Jeden z nejvzácnějších čolků ČR. Vázán na lužní lesy s trvalými tůnněmi. Přítomnost na Vypálenkách je klíčovým úspěchem projektu.</div>
+    <div class="quote">Jsem vzácný host. Moje přítomnost na Vypálenkách je znamením, že se tu věci dělají správně.</div>
+    <div class="locs"><span class="loc">Vypálenky</span></div>
+  </div>
+</div>
+</div>
+
+<script>
+// ResizeObserver sleduje skutecnou sirku .grid elementu
+// – nereaguje na okno prohlizece, ale na skutecnou sirku iframu
+var grid = document.getElementById('grid');
+
+function applyLayout(width) {
+  grid.classList.remove('cols-1','cols-2');
+  if (width < 420) {
+    grid.classList.add('cols-1');
+  } else if (width < 700) {
+    grid.classList.add('cols-2');
+  }
+  // nad 700px zustava vychozi 3 sloupce (zadna trida)
+}
+
+// Pouzijeme ResizeObserver – funguje na skutecnou sirku elementu
+if (window.ResizeObserver) {
+  var ro = new ResizeObserver(function(entries) {
+    for (var e of entries) {
+      applyLayout(e.contentRect.width);
+      reportHeight();
+    }
+  });
+  ro.observe(grid);
+} else {
+  // Fallback pro stare prohlizece
+  applyLayout(grid.offsetWidth);
+  window.addEventListener('resize', function() {
+    applyLayout(grid.offsetWidth);
+    reportHeight();
+  });
+}
+
+// Hlasime vysku rodici (StoryMaps iframe)
+function reportHeight() {
+  var h = document.body.scrollHeight;
+  window.parent.postMessage({ type: 'embed-size', height: h }, '*');
+  window.parent.postMessage(
+    JSON.stringify({ src: window.location.href, context: 'iframe.resize', height: h }), '*'
+  );
+}
+window.addEventListener('load', function() {
+  applyLayout(grid.offsetWidth);
+  setTimeout(reportHeight, 150);
+  setTimeout(reportHeight, 600);
+});
+</script>
+</body>
+</html>
