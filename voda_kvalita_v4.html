@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kvalita vody – LIFE in Salt Marshes</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --water:#1a5e7a;--wl:#3da4c0;--muted:#5a7080;--white:#fafcfd;
+  --ok:#1a5e7a;--warn:#c05a00;--bad:#c0290a;
+  --ok-bg:#e0f4f8;--warn-bg:#fff0e0;--bad-bg:#fde8e5;
+  --limit:#c0392b;--font:system-ui,"Segoe UI",Arial,sans-serif;
+}
+html,body{background:transparent;font-family:var(--font);overflow-x:hidden;}
+.wrap{padding:14px 14px 20px;}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--wl);margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:7px 16px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s;letter-spacing:.02em;white-space:nowrap;}
+.tab.active{color:var(--water);border-bottom:3px solid var(--water);}
+.tab:hover:not(.active){color:var(--water);}
+.section{display:none;}.section.active{display:block;}
+.sel-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center;}
+.sel-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+select{font-size:12px;padding:5px 28px 5px 10px;border:1.5px solid #b0ccd8;border-radius:8px;background:#fff;color:var(--water);cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%231a5e7a'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center;min-width:160px;max-width:100%;font-weight:600;}
+select:focus{outline:none;border-color:var(--water);}
+.param-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.ppill{display:flex;flex-direction:column;padding:7px 11px;border-radius:10px;cursor:pointer;border:1.5px solid #c5dde6;background:var(--white);transition:border-color .15s,background .15s;min-width:100px;flex:1;}
+.ppill.sel{background:var(--water);border-color:var(--water);}
+.ppill-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:2px;}
+.ppill.sel .ppill-label{color:rgba(255,255,255,.75);}
+.ppill-val{font-size:15px;font-weight:700;color:var(--water);}
+.ppill.sel .ppill-val{color:var(--white);}
+.ppill-unit{font-size:9px;color:var(--muted);margin-left:2px;}
+.ppill.sel .ppill-unit{color:rgba(255,255,255,.7);}
+.ppill-badge{margin-top:4px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;display:inline-block;width:fit-content;}
+.b-ok{background:var(--ok-bg);color:var(--ok);}
+.b-warn{background:var(--warn-bg);color:var(--warn);}
+.b-bad{background:var(--bad-bg);color:var(--bad);}
+.ppill.sel .ppill-badge{background:rgba(255,255,255,.2);color:#fff;}
+.chart-hdr{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:6px;}
+.chart-title{font-size:13px;font-weight:700;color:var(--water);}
+.chart-sub{font-size:11px;color:var(--muted);}
+.lim-legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);margin-left:auto;}
+.lim-swatch{width:18px;height:2px;background:var(--limit);display:inline-block;}
+.chart-wrap{position:relative;width:100%;margin-bottom:8px;}
+.h260{height:260px;}
+.h200{height:200px;}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;font-size:10.5px;color:var(--muted);}
+.leg-item{display:flex;align-items:center;gap:4px;}
+.leg-sq{width:18px;height:3px;border-radius:2px;flex-shrink:0;}
+.info-box{background:#e8f4f8;border-left:3px solid var(--wl);border-radius:0 8px 8px 0;padding:8px 12px;font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px;}
+.info-box strong{color:var(--water);}
+.alg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px;}
+.alg-card{background:var(--white);border-radius:10px;padding:10px 12px;border:1px solid #d0e8f0;}
+.alg-name{font-size:11px;font-weight:700;color:var(--water);margin-bottom:1px;}
+.alg-sci{font-size:9.5px;font-style:italic;color:var(--muted);margin-bottom:7px;}
+.alg-bar-bg{background:#dde8ee;border-radius:4px;height:7px;overflow:hidden;}
+.alg-bar{height:7px;border-radius:4px;}
+.alg-foot{font-size:9.5px;color:var(--muted);margin-top:4px;}
+@media(max-width:600px){
+  .ppill{min-width:calc(50% - 6px);}
+  select{font-size:13px;}
+  .tab{font-size:11.5px;padding:6px 12px;}
+}
+@media(max-width:380px){
+  .ppill{min-width:100%;}
+  .ppill-val{font-size:14px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('chemie')">Chemie vody</button>
+  <button class="tab" onclick="showTab('lokality')">Porovnání lokalit</button>
+  <button class="tab" onclick="showTab('algologie')">Algologie</button>
+</div>
+
+<!-- CHEMIE -->
+<div id="tab-chemie" class="section active">
+  <div class="sel-row">
+    <span class="sel-label">Lokalita</span>
+    <select id="sel-group" onchange="onGroupChange()"></select>
+    <select id="sel-subloc" onchange="onSublocChange()"></select>
+  </div>
+  <div class="param-row" id="param-pills"></div>
+  <div class="chart-hdr">
+    <span class="chart-title" id="chem-title">–</span>
+    <span class="chart-sub" id="chem-sub">–</span>
+    <div class="lim-legend"><span class="lim-swatch"></span>limitní hodnota</div>
+  </div>
+  <div class="chart-wrap h260"><canvas id="chartChem" role="img" aria-label="Vývoj chemického ukazatele v čase">–</canvas></div>
+  <div class="legend-row" id="chem-legend"></div>
+  <div class="info-box" id="chem-info"></div>
+</div>
+
+<!-- LOKALITY -->
+<div id="tab-lokality" class="section">
+  <div class="sel-row">
+    <span class="sel-label">Ukazatel</span>
+    <select id="loc-param-sel" onchange="renderLocChart()"></select>
+    <span class="sel-label">Termín</span>
+    <select id="loc-date-sel" onchange="renderLocChart()"></select>
+  </div>
+  <div class="chart-hdr">
+    <span class="chart-title" id="loc-title">–</span>
+    <div class="lim-legend"><span class="lim-swatch"></span>limitní hodnota</div>
+  </div>
+  <div class="chart-wrap" id="loc-chart-wrap" style="height:320px">
+    <canvas id="chartLoc" role="img" aria-label="Porovnání hodnot napříč lokalitami">–</canvas>
+  </div>
+  <div class="legend-row" style="margin-top:8px;">
+    <div class="leg-item"><div class="leg-sq" style="background:#29bf28"></div>v limitu</div>
+    <div class="leg-item"><div class="leg-sq" style="background:#e8820c"></div>blízko limitu (&gt;80 %)</div>
+    <div class="leg-item"><div class="leg-sq" style="background:#e83b2a"></div>překračuje limit</div>
+    <div class="leg-item"><div class="leg-sq" style="background:#3da4c0"></div>průměr skupiny</div>
+  </div>
+</div>
+
+<!-- ALGOLOGIE -->
+<div id="tab-algologie" class="section">
+  <p style="font-size:11.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;">
+    Mikroskopický rozbor mikrofyt (epipelon). Hodnocení: <strong>RNDr. Lenka Šejnohová, Ph.D.</strong>
+    Škála: 1 = stopové … 5 = dominantní. Sinice ≥ 4 = riziko vodního květu.
+  </p>
+  <div class="alg-grid" id="alg-grid"></div>
+  <div class="chart-hdr">
+    <span class="chart-title">Index sinic – vývoj 2023–2025</span>
+    <div class="lim-legend"><span class="lim-swatch"></span>práh rizika (4)</div>
+  </div>
+  <div class="chart-wrap h200"><canvas id="chartAlg" role="img" aria-label="Vývoj indexu abundance sinic v čase">–</canvas></div>
+  <div class="legend-row" id="alg-legend"></div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const RAW=[{"site_raw":"Bílovický potok 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1402.0,"nh4":6.4,"po4":2.02,"no3":3.4,"tp":2.44,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":5900.0,"nh4":0.23,"po4":0.12,"no3":1.9,"tp":0.24,"do":null,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1629.0,"nh4":0.13,"po4":1.39,"no3":2.2,"tp":1.68,"do":null,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":2410.0,"nh4":2.03,"po4":1.56,"no3":1.9,"tp":1.62,"do":null,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Vypálenky 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1763.0,"nh4":0.001,"po4":0.11,"no3":1.9,"tp":0.19,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":603.0,"nh4":0.08,"po4":0.2,"no3":3.0,"tp":1.86,"do":null,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1028.0,"nh4":2.66,"po4":0.18,"no3":2.1,"tp":1.34,"do":null,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Dobré pole 8.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1982.0,"nh4":60.11,"po4":33.43,"no3":2.2,"tp":35.91,"do":null,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Hevlínské jezero 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1181.0,"nh4":0.97,"po4":1.19,"no3":2.2,"tp":1.53,"do":null,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Hrabětický 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":358.0,"nh4":0.07,"po4":0.17,"no3":13.4,"tp":0.28,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Hrabětický pod výustí 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":369.0,"nh4":0.001,"po4":0.14,"no3":13.4,"tp":0.51,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický – pod výpustí"},{"site_raw":"Hrabětický nad 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":475.0,"nh4":0.9,"po4":0.21,"no3":11.1,"tp":0.27,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický – nad výpustí"},{"site_raw":"Vrbovecký potok 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":873.0,"nh4":2.08,"po4":10.51,"no3":2.8,"tp":11.06,"do":null,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Vrbovecký rybník 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1304.0,"nh4":0.17,"po4":4.34,"no3":2.2,"tp":4.83,"do":null,"group":"Vrbovecký rybník","subloc":"Rybník"},{"site_raw":"Vrbovecký rybník - tůň 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":1670.0,"nh4":0.15,"po4":0.12,"no3":2.0,"tp":1.77,"do":null,"group":"Vrbovecký rybník","subloc":"Tůň"},{"site_raw":"Novosedly rev. 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":2410.0,"nh4":0.26,"po4":0.11,"no3":2.1,"tp":0.32,"do":null,"group":"Novosedly","subloc":"Revitalizace"},{"site_raw":"Anšovský potok 9.9.","date_iso":"2025-09-09","date_disp":"09.09.2025","cond":411.0,"nh4":0.001,"po4":0.18,"no3":17.9,"tp":0.28,"do":null,"group":"Anšovský potok","subloc":"Celá lokalita"},{"site_raw":"Bílovický 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":1565.0,"nh4":0.65,"po4":0.96,"no3":15.5,"tp":1.27,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":4780.0,"nh4":0.07,"po4":0.001,"no3":2.0,"tp":0.11,"do":null,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":1491.0,"nh4":0.26,"po4":1.43,"no3":2.0,"tp":1.73,"do":null,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":2510.0,"nh4":4.6,"po4":2.65,"no3":2.2,"tp":3.56,"do":null,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Štorchova p. 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":3150.0,"nh4":0.14,"po4":0.12,"no3":2.2,"tp":0.27,"do":null,"group":"Trkmanec","subloc":"Štorchova stoka"},{"site_raw":"Vypálenky 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":1604.0,"nh4":0.08,"po4":0.001,"no3":2.0,"tp":0.14,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":512.0,"nh4":0.86,"po4":0.56,"no3":2.3,"tp":1.56,"do":null,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska tůň 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":924.0,"nh4":0.09,"po4":0.13,"no3":2.3,"tp":0.41,"do":null,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Kosteliska nová 30.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":4080.0,"nh4":0.26,"po4":0.26,"no3":2.0,"tp":0.65,"do":null,"group":"Kosteliska","subloc":"Nová tůň"},{"site_raw":"Dobré pole 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":2040.0,"nh4":70.75,"po4":41.99,"no3":2.2,"tp":70.11,"do":null,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"hevlínské jezero 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":1149.0,"nh4":0.42,"po4":0.6,"no3":2.1,"tp":0.64,"do":null,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Hrabětický p. 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":372.0,"nh4":0.09,"po4":0.12,"no3":12.9,"tp":0.22,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Hrabětický pod výustí 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":394.0,"nh4":0.15,"po4":0.001,"no3":12.4,"tp":0.31,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický – pod výpustí"},{"site_raw":"Hrabětický pod kanálem 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":393.0,"nh4":0.09,"po4":0.13,"no3":12.6,"tp":0.22,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický – pod kanálem"},{"site_raw":"Vrbovecký potok 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":825.0,"nh4":2.11,"po4":5.65,"no3":2.6,"tp":5.85,"do":null,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Vrbovecký tůň 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":1314.0,"nh4":0.31,"po4":0.001,"no3":2.0,"tp":0.32,"do":null,"group":"Vrbovecký rybník","subloc":"Tůň"},{"site_raw":"Vrbovecký rybník 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":1103.0,"nh4":0.11,"po4":2.04,"no3":1.9,"tp":2.12,"do":null,"group":"Vrbovecký rybník","subloc":"Rybník"},{"site_raw":"Novosedly rev. 31.7.","date_iso":"2025-07-31","date_disp":"31.07.2025","cond":2050.0,"nh4":0.1,"po4":0.001,"no3":1.9,"tp":1.09,"do":null,"group":"Novosedly","subloc":"Revitalizace"},{"site_raw":"Dobré pole 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":2440.0,"nh4":2.97,"po4":2.3,"no3":3.4,"tp":3.81,"do":null,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Hevlínské jezero 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":1138.0,"nh4":0.001,"po4":0.39,"no3":2.9,"tp":0.56,"do":null,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Hodonice 1 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":1004.0,"nh4":0.19,"po4":0.33,"no3":20.6,"tp":0.52,"do":null,"group":"Hodonice","subloc":"Stanoviště 1"},{"site_raw":"Hodonice 2 trub. 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":1299.0,"nh4":0.27,"po4":0.21,"no3":47.3,"tp":0.27,"do":null,"group":"Hodonice","subloc":"Stanoviště 2 – trubní výpust"},{"site_raw":"Hodonice 3 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":750.0,"nh4":1.1,"po4":0.33,"no3":5.5,"tp":0.47,"do":null,"group":"Hodonice","subloc":"Stanoviště 3"},{"site_raw":"Vrbovecký potok 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":954.0,"nh4":1.14,"po4":8.03,"no3":3.2,"tp":8.24,"do":null,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Vrbovecký rybník 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":1017.0,"nh4":0.001,"po4":1.22,"no3":2.9,"tp":1.58,"do":null,"group":"Vrbovecký rybník","subloc":"Rybník"},{"site_raw":"Novosedly 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":4290.0,"nh4":0.38,"po4":2.67,"no3":2.9,"tp":3.01,"do":null,"group":"Novosedly","subloc":"Hlavní stanoviště"},{"site_raw":"Novosedly revitalizace 30.5.","date_iso":"2025-05-30","date_disp":"30.05.2025","cond":1757.0,"nh4":0.001,"po4":0.07,"no3":3.5,"tp":0.25,"do":null,"group":"Novosedly","subloc":"Revitalizace"},{"site_raw":"Trkmanec Bílovický 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":7.46,"po4":0.82,"no3":16.7,"tp":1.04,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.12,"po4":0.09,"no3":1.9,"tp":0.21,"do":null,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.37,"po4":4.24,"no3":2.8,"tp":4.81,"do":null,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.13,"po4":0.15,"no3":13.0,"tp":0.29,"do":null,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Trkmanské louky 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.001,"po4":0.08,"no3":6.9,"tp":0.16,"do":null,"group":"Trkmanec","subloc":"Trkmanské louky"},{"site_raw":"Vypálenky 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.06,"po4":0.07,"no3":2.1,"tp":0.23,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.22,"po4":0.22,"no3":1.7,"tp":0.73,"do":null,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.2,"po4":0.11,"no3":1.7,"tp":0.36,"do":null,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Dobré pole 5.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":15.73,"po4":9.1,"no3":1.9,"tp":11.17,"do":null,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Havelínské jezero 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.25,"po4":1.37,"no3":1.7,"tp":1.75,"do":null,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Trávní dvůr tůň 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.06,"po4":0.1,"no3":5.1,"tp":0.2,"do":null,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Hrabětický p. 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":1.43,"po4":0.69,"no3":37.8,"tp":0.87,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Hrabětický pod výpustí 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":11.13,"po4":14.46,"no3":37.2,"tp":21.25,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický – pod výpustí"},{"site_raw":"Vrbovecký potok 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":2.96,"po4":9.92,"no3":9.8,"tp":10.68,"do":null,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Vrbovecký tůň 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.06,"po4":0.11,"no3":1.7,"tp":0.19,"do":null,"group":"Vrbovecký rybník","subloc":"Tůň"},{"site_raw":"Novosedly 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.11,"po4":0.25,"no3":1.6,"tp":0.62,"do":null,"group":"Novosedly","subloc":"Hlavní stanoviště"},{"site_raw":"Krumvíř 6.3.","date_iso":"2025-03-06","date_disp":"06.03.2025","cond":null,"nh4":0.11,"po4":1.2,"no3":1.9,"tp":1.36,"do":null,"group":"Krumvíř","subloc":"Celá lokalita"},{"site_raw":"Trkmanec Bílovický 30.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":7.5,"nh4":1.38,"po4":1.51,"no3":1.9,"tp":2.23,"do":0.06,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň 30.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":24.5,"nh4":0.13,"po4":0.13,"no3":0.001,"tp":0.55,"do":0.05,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň 30.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":8.8,"nh4":0.05,"po4":0.09,"no3":0.001,"tp":0.62,"do":0.02,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed 30.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":11.7,"nh4":1.02,"po4":0.94,"no3":0.001,"tp":1.31,"do":0.02,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Vypálenky 29.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":6.8,"nh4":0.001,"po4":0.001,"no3":0.001,"tp":0.48,"do":0.02,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště 30.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":44.9,"nh4":0.001,"po4":0.43,"no3":0.001,"tp":1.34,"do":0.001,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 29.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":23.3,"nh4":0.09,"po4":0.001,"no3":1.0,"tp":1.23,"do":0.001,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Dobré pole 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":7.9,"nh4":25.17,"po4":42.26,"no3":20.4,"tp":45.18,"do":0.01,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Hevlínské jezero 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":8.7,"nh4":0.31,"po4":1.44,"no3":0.001,"tp":1.44,"do":0.001,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Trávní dvůr tůň 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":5.4,"nh4":0.08,"po4":0.44,"no3":0.001,"tp":0.67,"do":0.001,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Hrabětický p. 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":3.8,"nh4":0.11,"po4":0.11,"no3":19.1,"tp":0.25,"do":0.001,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Hrabětiský pod výpustí 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":3.7,"nh4":0.001,"po4":0.001,"no3":19.2,"tp":0.33,"do":0.01,"group":"Trávní dvůr","subloc":"Hrabětický – pod výpustí"},{"site_raw":"Vrbovecký potok 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":6.0,"nh4":1.46,"po4":7.01,"no3":0.001,"tp":7.68,"do":0.001,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Vrbovecký tůň 31.7.","date_iso":"2024-07-31","date_disp":"31.07.2024","cond":20.5,"nh4":0.001,"po4":0.12,"no3":0.001,"tp":0.36,"do":0.001,"group":"Vrbovecký rybník","subloc":"Tůň"},{"site_raw":"Trkmanec Bílovický 19.6","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1680.0,"nh4":1.85,"po4":2.44,"no3":4.5,"tp":2.75,"do":3.16,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":5050.0,"nh4":0.08,"po4":0.001,"no3":0.001,"tp":0.12,"do":11.17,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":2070.0,"nh4":0.19,"po4":1.36,"no3":0.001,"tp":1.55,"do":13.0,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":3100.0,"nh4":0.42,"po4":1.49,"no3":0.001,"tp":1.67,"do":0.9,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Krumvíř 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1485.0,"nh4":0.08,"po4":0.21,"no3":0.001,"tp":0.37,"do":9.39,"group":"Krumvíř","subloc":"Celá lokalita"},{"site_raw":"Novosedly revitalizace 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":2300.0,"nh4":0.06,"po4":0.001,"no3":0.001,"tp":0.17,"do":3.8,"group":"Novosedly","subloc":"Revitalizace"},{"site_raw":"Novosedly tůň 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":34.33,"nh4":0.13,"po4":0.43,"no3":0.001,"tp":0.64,"do":6.76,"group":"Novosedly","subloc":"Tůň"},{"site_raw":"Vypálenky 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1886.0,"nh4":0.76,"po4":0.63,"no3":0.001,"tp":0.79,"do":1.7,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":750.0,"nh4":0.1,"po4":0.57,"no3":0.001,"tp":0.81,"do":12.7,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":742.0,"nh4":0.18,"po4":0.59,"no3":0.001,"tp":0.79,"do":6.5,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Dobré pole 19.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1758.0,"nh4":4.26,"po4":10.08,"no3":0.001,"tp":10.61,"do":12.5,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Hevlínské jezero přítok 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1023.0,"nh4":0.3,"po4":1.5,"no3":0.001,"tp":1.65,"do":0.83,"group":"Hevlínské jezero","subloc":"Přítok"},{"site_raw":"Hevlínské jezero 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1062.0,"nh4":0.31,"po4":1.31,"no3":0.001,"tp":1.42,"do":1.32,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Trávní dvůr tůň 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1350.0,"nh4":1.05,"po4":4.08,"no3":0.001,"tp":4.04,"do":0.7,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Hrabětický p. 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":396.0,"nh4":0.15,"po4":0.18,"no3":18.4,"tp":0.28,"do":6.4,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Hrabětický pod výústí 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":417.0,"nh4":0.05,"po4":0.001,"no3":0.001,"tp":0.41,"do":5.2,"group":"Trávní dvůr","subloc":"Hrabětický – pod výpustí"},{"site_raw":"Vrbovecký potok 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1272.0,"nh4":1.31,"po4":6.79,"no3":4.2,"tp":7.17,"do":3.57,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Vrbovecký tůň 20.6.","date_iso":"2024-06-20","date_disp":"20.06.2024","cond":1037.0,"nh4":0.23,"po4":0.001,"no3":20.1,"tp":0.2,"do":24.3,"group":"Vrbovecký rybník","subloc":"Tůň"},{"site_raw":"Trkmanec Bílovický 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1855.0,"nh4":1.99,"po4":1.57,"no3":7.3,"tp":1.82,"do":2.93,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M.Tůň 29.4","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":4.89,"nh4":0.18,"po4":0.07,"no3":2.7,"tp":0.22,"do":10.42,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V.Tůň 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":2.49,"nh4":1.92,"po4":4.15,"no3":6.9,"tp":4.43,"do":4.25,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":3.3,"nh4":0.45,"po4":0.37,"no3":3.0,"tp":0.55,"do":0.92,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Krumvíř 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":2.24,"nh4":0.86,"po4":0.37,"no3":2.9,"tp":0.56,"do":13.95,"group":"Krumvíř","subloc":"Celá lokalita"},{"site_raw":"Božický mokřad 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1138.0,"nh4":0.18,"po4":0.47,"no3":2.8,"tp":0.62,"do":7.75,"group":"Božický mokřad","subloc":"Celá lokalita"},{"site_raw":"Vypálenky kontrola 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":831.0,"nh4":0.07,"po4":0.06,"no3":2.8,"tp":0.2,"do":7.33,"group":"Vypálenky","subloc":"Kontrolní stanoviště"},{"site_raw":"Vypálenky 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1676.0,"nh4":0.15,"po4":0.07,"no3":3.1,"tp":0.18,"do":6.73,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":482.0,"nh4":0.001,"po4":0.78,"no3":2.8,"tp":1.14,"do":20.37,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 29.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1241.0,"nh4":0.33,"po4":0.25,"no3":3.2,"tp":0.52,"do":8.34,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Novosedly 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":3.44,"nh4":0.27,"po4":0.12,"no3":3.2,"tp":0.3,"do":null,"group":"Novosedly","subloc":"Hlavní stanoviště"},{"site_raw":"Hevlínské jezero přítok 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1052.0,"nh4":0.4,"po4":1.58,"no3":2.8,"tp":1.61,"do":1.75,"group":"Hevlínské jezero","subloc":"Přítok"},{"site_raw":"Hevlínské jezero tůň 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1103.0,"nh4":0.11,"po4":0.99,"no3":2.8,"tp":1.08,"do":7.21,"group":"Hevlínské jezero","subloc":"Tůň"},{"site_raw":"Travní dvůr tůň 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1670.0,"nh4":0.09,"po4":0.6,"no3":2.9,"tp":0.97,"do":6.86,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Travní dvůr Hrabětický p. 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":385.0,"nh4":0.18,"po4":0.001,"no3":25.5,"tp":0.18,"do":8.64,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Travní dvůr Hrabětický pod výústí 30.4","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":390.0,"nh4":0.19,"po4":0.06,"no3":25.6,"tp":0.15,"do":8.71,"group":"Trávní dvůr","subloc":"Hrabětický – pod výpustí"},{"site_raw":"Vrbovecký p. 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1153.0,"nh4":2.18,"po4":6.51,"no3":3.8,"tp":8.95,"do":2.3,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Dobré pole 30.4.","date_iso":"2024-04-30","date_disp":"30.04.2024","cond":1817.0,"nh4":6.71,"po4":3.55,"no3":2.8,"tp":4.22,"do":6.04,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Trkmanec Bílovický","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":2300.0,"nh4":0.75,"po4":0.85,"no3":34.6,"tp":0.99,"do":6.8,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":4460.0,"nh4":0.001,"po4":0.001,"no3":3.2,"tp":0.2,"do":7.85,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":2850.0,"nh4":2.21,"po4":3.53,"no3":4.3,"tp":3.78,"do":1.92,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":3600.0,"nh4":0.42,"po4":0.48,"no3":10.9,"tp":0.62,"do":3.94,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Krumvíř","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":2070.0,"nh4":0.19,"po4":0.42,"no3":3.5,"tp":0.53,"do":8.95,"group":"Krumvíř","subloc":"Celá lokalita"},{"site_raw":"Božický M.","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1108.0,"nh4":0.05,"po4":0.23,"no3":3.0,"tp":0.46,"do":1.8,"group":"Božický mokřad","subloc":"Celá lokalita"},{"site_raw":"Vypálenky kont","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":926.0,"nh4":0.48,"po4":0.24,"no3":3.5,"tp":0.35,"do":3.35,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Vypálenky tůň","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1535.0,"nh4":0.001,"po4":0.001,"no3":3.5,"tp":0.09,"do":8.91,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště tůň","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":639.0,"nh4":0.001,"po4":0.3,"no3":3.2,"tp":0.45,"do":11.5,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 2","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1117.0,"nh4":0.18,"po4":1.82,"no3":3.0,"tp":1.88,"do":5.8,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Novosedly","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":2430.0,"nh4":0.16,"po4":0.07,"no3":3.0,"tp":0.19,"do":10.95,"group":"Novosedly","subloc":"Hlavní stanoviště"},{"site_raw":"Dobré pole","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":2400.0,"nh4":0.13,"po4":0.61,"no3":37.0,"tp":0.68,"do":7.62,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Hevlínské jezero přítok","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1001.0,"nh4":0.06,"po4":1.22,"no3":3.0,"tp":1.36,"do":2.96,"group":"Hevlínské jezero","subloc":"Přítok"},{"site_raw":"Hevlínské jezero tůň","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1003.0,"nh4":0.001,"po4":0.74,"no3":3.0,"tp":0.89,"do":4.14,"group":"Hevlínské jezero","subloc":"Tůň"},{"site_raw":"Trávní dvůr tůň","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1596.0,"nh4":0.05,"po4":0.001,"no3":3.1,"tp":0.17,"do":9.72,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Trávní dvůr Hrabětický","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":2086.0,"nh4":0.15,"po4":0.13,"no3":41.8,"tp":0.25,"do":8.83,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Trávní dvůr Hrabětický pod výustí","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":213.0,"nh4":2.65,"po4":0.24,"no3":8.3,"tp":2.13,"do":5.98,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Vrbovecký potok","date_iso":"2024-03-19","date_disp":"19.03.2024","cond":1450.0,"nh4":0.11,"po4":3.9,"no3":12.8,"tp":3.91,"do":7.83,"group":"Vrbovecký rybník","subloc":"Přítok – potok"},{"site_raw":"Trkmanec Bílovický","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.05,"po4":0.0,"no3":1.6,"tp":0.01,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.0,"no3":0.3,"tp":0.0,"do":null,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.06,"po4":0.03,"no3":0.3,"tp":0.04,"do":null,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.01,"no3":0.3,"tp":0.01,"do":null,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Krumvíř","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.03,"po4":0.0,"no3":0.4,"tp":0.01,"do":null,"group":"Krumvíř","subloc":"Celá lokalita"},{"site_raw":"Božický M.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.01,"no3":0.3,"tp":0.01,"do":null,"group":"Božický mokřad","subloc":"Celá lokalita"},{"site_raw":"Vypálenky kont","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.0,"no3":0.3,"tp":0.0,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Vypálenky tůň","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.01,"po4":0.01,"no3":0.3,"tp":0.01,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Husí Pastviště tůň","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.0,"no3":0.3,"tp":0.0,"do":null,"group":"Husí Pastviště","subloc":"Celá lokalita"},{"site_raw":"Kosteliska 2","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.03,"po4":0.0,"no3":0.3,"tp":0.0,"do":null,"group":"Kosteliska","subloc":"Stará tůň"},{"site_raw":"Novosedly","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.01,"no3":0.3,"tp":0.01,"do":null,"group":"Novosedly","subloc":"Hlavní stanoviště"},{"site_raw":"Hevlínské jezero přítok","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.01,"no3":0.3,"tp":0.02,"do":null,"group":"Hevlínské jezero","subloc":"Přítok"},{"site_raw":"Hevlínské jezero tůň 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.01,"no3":0.3,"tp":0.02,"do":null,"group":"Hevlínské jezero","subloc":"Tůň"},{"site_raw":"Trávní dvůr tůň 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.01,"po4":0.0,"no3":0.3,"tp":0.01,"do":null,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Trávní dvůr Hrabětický 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.01,"po4":0.01,"no3":2.4,"tp":0.01,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Dobré pole 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.03,"po4":0.05,"no3":0.3,"tp":0.05,"do":null,"group":"Dobré Pole","subloc":"Celá lokalita"},{"site_raw":"Vrbovecký rybník 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.0,"po4":0.03,"no3":0.8,"tp":0.03,"do":null,"group":"Vrbovecký rybník","subloc":"Rybník"},{"site_raw":"Trkmanec Bílovický","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.0,"no3":0.2,"tp":0.001,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec M. Tůň","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.001,"no3":0.1,"tp":0.001,"do":null,"group":"Trkmanec","subloc":"Malá Tůň"},{"site_raw":"Trkmanec V. Tůň","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.0,"no3":0.001,"tp":0.001,"do":null,"group":"Trkmanec","subloc":"Velká Tůň"},{"site_raw":"Trkmanec Střed","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.0,"no3":0.001,"tp":0.001,"do":null,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Božický M.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.001,"no3":0.001,"tp":0.001,"do":null,"group":"Božický mokřad","subloc":"Celá lokalita"},{"site_raw":"Novosedly","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.001,"no3":0.1,"tp":0.001,"do":null,"group":"Novosedly","subloc":"Hlavní stanoviště"},{"site_raw":"Trávní dvůr tůň 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.001,"no3":0.1,"tp":0.001,"do":null,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Trávní dvůr Hrabětický 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.0,"no3":0.2,"tp":0.001,"do":null,"group":"Trávní dvůr","subloc":"Hrabětický potok"},{"site_raw":"Vrbovecký rybník 6.12.","date_iso":"2023-12-06","date_disp":"06.12.2023","cond":null,"nh4":0.001,"po4":0.001,"no3":0.4,"tp":0.001,"do":null,"group":"Vrbovecký rybník","subloc":"Rybník"},{"site_raw":"Vypálenky","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.22,"po4":0.001,"no3":6.5,"tp":null,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Trkmanka","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.83,"po4":0.88,"no3":9.2,"tp":null,"do":null,"group":"Trkmanec","subloc":"Trkmanka"},{"site_raw":"Bílovický potok","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":1.01,"po4":3.67,"no3":6.3,"tp":null,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Trkmanec- střední stoka","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":3.05,"po4":4.29,"no3":3.5,"tp":null,"do":null,"group":"Trkmanec","subloc":"Střední stoka"},{"site_raw":"Nové Mlýny - soutok","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.39,"po4":0.43,"no3":10.1,"tp":null,"do":null,"group":"Husí Pastviště","subloc":"Nové Mlýny – soutok"},{"site_raw":"Božický mokřad","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.17,"po4":1.2,"no3":3.9,"tp":null,"do":null,"group":"Božický mokřad","subloc":"Celá lokalita"},{"site_raw":"Trávní dvůr","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.36,"po4":0.45,"no3":8.6,"tp":null,"do":null,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Vrbovecký rybník - přítok","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.19,"po4":4.32,"no3":9.0,"tp":null,"do":null,"group":"Vrbovecký rybník","subloc":"Rybník"},{"site_raw":"Hevlínské jezero","date_iso":"2023-08-08","date_disp":"08.08.2023","cond":null,"nh4":0.82,"po4":0.77,"no3":3.8,"tp":null,"do":null,"group":"Hevlínské jezero","subloc":"Jezero"},{"site_raw":"Trkmanka","date_iso":"2022-07-12","date_disp":"12.07.2022","cond":null,"nh4":1.23,"po4":2.26,"no3":0.73676,"tp":0.2486,"do":null,"group":"Trkmanec","subloc":"Trkmanka"},{"site_raw":"Bílovický","date_iso":"2022-07-12","date_disp":"12.07.2022","cond":null,"nh4":2.59,"po4":2.95,"no3":0.9617,"tp":0.3164,"do":null,"group":"Trkmanec","subloc":"Bílovický potok"},{"site_raw":"Vypálenky","date_iso":"2022-07-12","date_disp":"12.07.2022","cond":null,"nh4":0.05,"po4":0.001,"no3":0.001,"tp":0.001,"do":null,"group":"Vypálenky","subloc":"Hlavní tůň"},{"site_raw":"Travní dvůr","date_iso":"2022-07-12","date_disp":"12.07.2022","cond":null,"nh4":0.09,"po4":0.16,"no3":0.05216,"tp":2.26,"do":null,"group":"Trávní dvůr","subloc":"Tůň"},{"site_raw":"Hevlín","date_iso":"2022-07-12","date_disp":"12.07.2022","cond":null,"nh4":0.15,"po4":0.15,"no3":0.0489,"tp":0.001,"do":null,"group":"Hevlínské jezero","subloc":"Jezero"}];
+const SORTED_GROUPS=["Trkmanec","Trávní dvůr","Vrbovecký rybník","Hevlínské jezero","Vypálenky","Novosedly","Husí Pastviště","Kosteliska","Dobré Pole","Krumvíř","Božický mokřad","Hodonice","Anšovský potok"];
+
+const PARAMS=[
+  {id:'cond',label:'Konduktivita',   unit:'µS/cm',limit:1500, inv:false,
+   desc:'Mineralizace vody. Vysoké hodnoty typické pro slaniska. Limit dle NV 401/2015 pro tekoucí vody II. třídy.'},
+  {id:'nh4', label:'NH₄⁺',           unit:'mg/l', limit:0.5,  inv:false,
+   desc:'Amonné ionty – indikátor organického znečištění. Limit 0,5 mg/l pro vody II. třídy.'},
+  {id:'po4', label:'PO₄³⁻',          unit:'mg/l', limit:0.15, inv:false,
+   desc:'Fosforečnany – klíčový ukazatel eutrofizace. Překročení 0,15 mg/l způsobuje přemnožení řas a sinic.'},
+  {id:'no3', label:'NO₃⁻',           unit:'mg/l', limit:11.3, inv:false,
+   desc:'Dusičnany – přísun ze zemědělství. Vysoké hodnoty zejména v přítocích z okolní zemědělské krajiny.'},
+  {id:'tp',  label:'P celkový',      unit:'mg/l', limit:0.2,  inv:false,
+   desc:'Celkový fosfor (PO₄). Limit 0,2 mg/l. Klíčový ukazatel pro posouzení eutrofizace vodního tělesa.'},
+  {id:'do',  label:'O₂ rozp.',       unit:'mg/l', limit:7,    inv:true,
+   desc:'Rozpuštěný kyslík. Minimum 7 mg/l pro dobrý ekologický stav. Nízké hodnoty ohrožují vodní organismy.'},
+];
+
+const LINE_COLORS=['#1a5e7a','#3da4c0','#e67e22','#8e44ad','#c0392b','#16a085','#d35400','#2980b9'];
+const COL_OK='#29bf28',COL_WARN='#e8820c',COL_BAD='#e83b2a',COL_AVG='#3da4c0',COL_LIM='#c0392b';
+
+function axColor(){return '#3a5a6a';}
+function gridColor(){return 'rgba(58,90,106,0.12)';}
+
+/* ── index ── */
+const groups={};
+RAW.forEach(e=>{
+  if(!groups[e.group])groups[e.group]={};
+  if(!groups[e.group][e.subloc])groups[e.group][e.subloc]=[];
+  groups[e.group][e.subloc].push(e);
+});
+
+let selGroup=SORTED_GROUPS[0];
+let selSubloc='__all__';
+let selParam=PARAMS[0];
+let chartChem=null,chartLoc=null,chartAlg=null;
+
+function fmtDate(iso){const[y,m,d]=iso.split('-');return d+'.'+m+'.'+y;}
+
+function getEntries(){
+  if(!groups[selGroup])return[];
+  if(selSubloc==='__all__')return Object.values(groups[selGroup]).flat();
+  return groups[selGroup][selSubloc]||[];
+}
+
+function lastVal(entries,pid){
+  const s=[...entries].filter(e=>e[pid]!=null).sort((a,b)=>b.date_iso.localeCompare(a.date_iso));
+  return s.length?s[0][pid]:null;
+}
+
+function badgeClass(v,p){
+  if(v===null)return'';
+  const over=p.inv?v<p.limit:v>p.limit;
+  if(!over)return'b-ok';
+  return Math.abs(v-p.limit)/p.limit>0.5?'b-bad':'b-warn';
+}
+function badgeText(v,p){
+  if(v===null)return'–';
+  const over=p.inv?v<p.limit:v>p.limit;
+  if(!over)return'✓ v limitu';
+  return(p.inv?'-':'+')+Math.round(Math.abs(v-p.limit)/p.limit*100)+'% limitu';
+}
+
+/* ── selectors ── */
+function buildGroupSel(){
+  const s=document.getElementById('sel-group');
+  s.innerHTML='';
+  SORTED_GROUPS.forEach(g=>{
+    const o=document.createElement('option');
+    o.value=g;o.textContent=g;
+    if(g===selGroup)o.selected=true;
+    s.appendChild(o);
+  });
+}
+function onGroupChange(){
+  selGroup=document.getElementById('sel-group').value;
+  selSubloc='__all__';
+  buildSublocSel();renderParamPills();renderChemChart();
+}
+function buildSublocSel(){
+  const s=document.getElementById('sel-subloc');
+  s.innerHTML='';
+  const subs=Object.keys(groups[selGroup]||{}).sort();
+  if(subs.length>1){
+    const o=document.createElement('option');
+    o.value='__all__';o.textContent='– vše –';s.appendChild(o);
+  }
+  subs.forEach(sub=>{
+    const o=document.createElement('option');
+    o.value=sub;o.textContent=sub;
+    if(sub===selSubloc)o.selected=true;
+    s.appendChild(o);
+  });
+  s.style.display=subs.length<2?'none':'';
+}
+function onSublocChange(){
+  selSubloc=document.getElementById('sel-subloc').value;
+  renderParamPills();renderChemChart();
+}
+
+/* ── param pills ── */
+function renderParamPills(){
+  const entries=getEntries();
+  const c=document.getElementById('param-pills');
+  c.innerHTML='';
+  PARAMS.forEach(p=>{
+    const v=lastVal(entries,p.id);
+    const disp=v!=null?(v<0.01?'<0,01':v.toLocaleString('cs',{maximumFractionDigits:2})):'–';
+    const d=document.createElement('div');
+    d.className='ppill'+(p.id===selParam.id?' sel':'');
+    d.innerHTML='<span class="ppill-label">'+p.label+'</span>'+
+      '<span class="ppill-val">'+disp+'<span class="ppill-unit">'+p.unit+'</span></span>'+
+      '<span class="ppill-badge '+badgeClass(v,p)+'">'+badgeText(v,p)+'</span>';
+    d.onclick=()=>{selParam=p;renderParamPills();renderChemChart();};
+    c.appendChild(d);
+  });
+}
+
+/* ══ CHEMIE CHART ══ */
+function renderChemChart(){
+  if(chartChem){chartChem.destroy();chartChem=null;}
+  const p=selParam;
+  document.getElementById('chem-info').innerHTML='<strong>'+p.label+'</strong> — '+p.desc;
+  document.getElementById('chem-sub').textContent='Limit: '+p.limit+' '+p.unit;
+
+  const grpSubs=groups[selGroup]||{};
+  const subs=selSubloc==='__all__'?Object.keys(grpSubs).sort():[selSubloc];
+
+  /* dates that actually have data for this param */
+  const datesWithData=new Set();
+  subs.forEach(sub=>{
+    (grpSubs[sub]||[]).forEach(e=>{if(e[p.id]!=null)datesWithData.add(e.date_iso);});
+  });
+  const allDates=[...datesWithData].sort();
+
+  if(!allDates.length){
+    document.getElementById('chem-title').textContent=selGroup+' — '+p.label+': žádná data';
+    document.getElementById('chem-legend').innerHTML='';
+    return;
+  }
+
+  const datasets=[];
+  subs.forEach((sub,si)=>{
+    const byDate={};
+    (grpSubs[sub]||[]).forEach(e=>{if(e[p.id]!=null)byDate[e.date_iso]=e[p.id];});
+    const vals=allDates.map(d=>byDate[d]!=undefined?byDate[d]:null);
+    if(vals.every(v=>v===null))return;
+
+    const hasMultiplePoints=vals.filter(v=>v!=null).length>1;
+    datasets.push({
+      label:sub,
+      data:vals,
+      borderColor:LINE_COLORS[si%LINE_COLORS.length],
+      backgroundColor:LINE_COLORS[si%LINE_COLORS.length]+(subs.length===1?'25':'15'),
+      borderWidth:hasMultiplePoints?2:0,
+      pointRadius:hasMultiplePoints?4:8,
+      pointHoverRadius:hasMultiplePoints?6:10,
+      pointStyle:'circle',
+      fill:subs.length===1&&hasMultiplePoints,
+      tension:0.25,
+      spanGaps:false,
+    });
+  });
+
+  /* limit line */
+  datasets.push({
+    label:'Limitní hodnota',
+    data:Array(allDates.length).fill(p.limit),
+    borderColor:COL_LIM,
+    borderDash:[6,4],
+    borderWidth:1.5,
+    pointRadius:0,
+    fill:false,
+    tension:0,
+  });
+
+  const title=selSubloc==='__all__'
+    ?selGroup+' — '+p.label
+    :selGroup+' / '+selSubloc+' — '+p.label;
+  document.getElementById('chem-title').textContent=title;
+
+  const ac=axColor();
+  const gc=gridColor();
+
+  chartChem=new Chart(document.getElementById('chartChem'),{
+    type:'line',
+    data:{labels:allDates.map(fmtDate),datasets},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){
+          if(ctx.dataset.label==='Limitní hodnota')return null;
+          if(ctx.parsed.y===null)return null;
+          return ctx.dataset.label+': '+ctx.parsed.y+' '+p.unit;
+        }}}
+      },
+      scales:{
+        y:{
+          ticks:{color:ac,font:{size:10}},
+          grid:{color:gc},
+          title:{
+            display:true,
+            text:p.label+' ('+p.unit+')',
+            color:ac,
+            font:{size:11,weight:600}
+          }
+        },
+        x:{
+          ticks:{color:ac,font:{size:10},maxRotation:42,autoSkip:false},
+          grid:{color:gc},
+          title:{
+            display:true,
+            text:'Datum odběru',
+            color:ac,
+            font:{size:11,weight:600}
+          }
+        }
+      }
+    }
+  });
+
+  /* legend */
+  const lg=document.getElementById('chem-legend');
+  lg.innerHTML='';
+  subs.forEach((sub,si)=>{
+    if((grpSubs[sub]||[]).every(e=>e[p.id]==null))return;
+    lg.innerHTML+='<div class="leg-item"><div class="leg-sq" style="background:'+LINE_COLORS[si%LINE_COLORS.length]+'"></div>'+sub+'</div>';
+  });
+  lg.innerHTML+='<div class="leg-item"><div class="leg-sq" style="border-top:2px dashed '+COL_LIM+';height:0;width:18px;margin-top:2px;background:transparent"></div>limit '+p.limit+' '+p.unit+'</div>';
+  setTimeout(reportHeight,100);
+}
+
+/* ══ LOKALITY CHART ══ */
+function buildLocSelectors(){
+  const ps=document.getElementById('loc-param-sel');
+  PARAMS.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.id;o.textContent=p.label+' ('+p.unit+')';ps.appendChild(o);
+  });
+  const ds=document.getElementById('loc-date-sel');
+  const avg=document.createElement('option');
+  avg.value='__avg__';avg.textContent='Průměr všech měření';ds.appendChild(avg);
+  const dates=[...new Set(RAW.map(e=>e.date_iso))].sort().reverse();
+  dates.forEach(d=>{
+    const o=document.createElement('option');
+    o.value=d;o.textContent=fmtDate(d);ds.appendChild(o);
+  });
+}
+
+function renderLocChart(){
+  if(chartLoc){chartLoc.destroy();chartLoc=null;}
+  const pid=document.getElementById('loc-param-sel').value;
+  const dateVal=document.getElementById('loc-date-sel').value;
+  const p=PARAMS.find(x=>x.id===pid);
+  const isAvg=dateVal==='__avg__';
+
+  const byGroupSub={};
+  RAW.forEach(e=>{
+    if(e[pid]==null)return;
+    if(!isAvg&&e.date_iso!==dateVal)return;
+    const key=e.group+'|||'+e.subloc;
+    if(!byGroupSub[key])byGroupSub[key]={group:e.group,sub:e.subloc,vals:[]};
+    byGroupSub[key].vals.push(e[pid]);
+  });
+
+  const items=Object.values(byGroupSub).map(it=>({
+    group:it.group,sub:it.sub,
+    val:+(it.vals.reduce((s,v)=>s+v,0)/it.vals.length).toFixed(3),
+    n:it.vals.length
+  }));
+
+  if(!items.length){
+    document.getElementById('loc-title').textContent='Žádná data pro vybraný termín';
+    return;
+  }
+
+  items.sort((a,b)=>a.group.localeCompare(b.group)||a.sub.localeCompare(b.sub));
+
+  const labels=[],vals=[],colors=[],borderColors=[],borderWidths=[];
+  const byGroup={};
+  items.forEach(it=>{if(!byGroup[it.group])byGroup[it.group]=[];byGroup[it.group].push(it);});
+
+  SORTED_GROUPS.forEach(g=>{
+    const gItems=byGroup[g];
+    if(!gItems)return;
+    if(gItems.length===1){
+      const v=gItems[0].val;
+      const over=p.inv?v<p.limit:v>p.limit;
+      labels.push(g);vals.push(v);
+      colors.push(!over?COL_OK:Math.abs(v-p.limit)/p.limit>0.5?COL_BAD:COL_WARN);
+      borderColors.push('transparent');borderWidths.push(0);
+    } else {
+      const gavg=+(gItems.reduce((s,i)=>s+i.val,0)/gItems.length).toFixed(3);
+      labels.push(g+' (prům.)');vals.push(gavg);
+      colors.push(COL_AVG);borderColors.push('#1a5e7a');borderWidths.push(1);
+      gItems.forEach(it=>{
+        const over=p.inv?it.val<p.limit:it.val>p.limit;
+        labels.push('  └ '+it.sub);vals.push(it.val);
+        colors.push(!over?COL_OK:Math.abs(it.val-p.limit)/p.limit>0.5?COL_BAD:COL_WARN);
+        borderColors.push('transparent');borderWidths.push(0);
+      });
+    }
+  });
+
+  const titleDate=isAvg
+    ?'průměr všech měření ('+[...new Set(RAW.map(e=>e.date_iso))].length+' termínů)'
+    :fmtDate(dateVal);
+  document.getElementById('loc-title').textContent=p.label+' — '+titleDate+' · limit: '+p.limit+' '+p.unit;
+
+  const h=Math.max(240,labels.length*28+80);
+  document.getElementById('loc-chart-wrap').style.height=h+'px';
+
+  const ac=axColor();
+  const gc=gridColor();
+
+  chartLoc=new Chart(document.getElementById('chartLoc'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:p.label,data:vals,backgroundColor:colors,
+         borderColor:borderColors,borderWidth:borderWidths,
+         borderRadius:3,indexAxis:'y'},
+        {label:'Limit',data:Array(labels.length).fill(p.limit),
+         type:'line',borderColor:COL_LIM,borderDash:[5,4],
+         borderWidth:1.5,pointRadius:0,fill:false,indexAxis:'y'}
+      ]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){
+          if(ctx.dataset.label==='Limit')return null;
+          return ctx.parsed.x+' '+p.unit;
+        }}}
+      },
+      scales:{
+        x:{
+          ticks:{color:ac,font:{size:10}},
+          grid:{color:gc},
+          title:{
+            display:true,
+            text:p.label+' ('+p.unit+')',
+            color:ac,
+            font:{size:11,weight:600}
+          }
+        },
+        y:{
+          ticks:{color:ac,font:{size:10}},
+          grid:{display:false},
+          title:{
+            display:true,
+            text:'Lokalita / odběrové místo',
+            color:ac,
+            font:{size:11,weight:600}
+          }
+        }
+      }
+    }
+  });
+  setTimeout(reportHeight,100);
+}
+
+/* ══ ALGOLOGIE ══ */
+const ALG_DATA=[
+  {name:'Microcystis aeruginosa',sci:'Cyanobacteria – toxická',
+   scores:{Trkmanec:2,Vypálenky:1,'Husí Pastviště':1,Kosteliska:1,'Dobré Pole':4,'Hevlínské jezero':2,'Trávní dvůr':1,'Vrbovecký rybník':1,Novosedly:2}},
+  {name:'Aphanizomenon flos-aquae',sci:'Cyanobacteria',
+   scores:{Trkmanec:1,Vypálenky:1,'Husí Pastviště':1,Kosteliska:1,'Dobré Pole':3,'Hevlínské jezero':2,'Trávní dvůr':1,'Vrbovecký rybník':1,Novosedly:2}},
+  {name:'Anabaena / Dolichospermum',sci:'Cyanobacteria',
+   scores:{Trkmanec:1,Vypálenky:1,'Husí Pastviště':2,Kosteliska:1,'Dobré Pole':3,'Hevlínské jezero':1,'Trávní dvůr':1,'Vrbovecký rybník':1,Novosedly:1}},
+  {name:'Chlorella sp.',sci:'Chlorophyta – zelené řasy',
+   scores:{Trkmanec:3,Vypálenky:2,'Husí Pastviště':3,Kosteliska:2,'Dobré Pole':3,'Hevlínské jezero':2,'Trávní dvůr':2,'Vrbovecký rybník':3,Novosedly:3}},
+  {name:'Fragilaria / rozsivky',sci:'Bacillariophyta – bioindikace',
+   scores:{Trkmanec:3,Vypálenky:3,'Husí Pastviště':3,Kosteliska:3,'Dobré Pole':2,'Hevlínské jezero':3,'Trávní dvůr':3,'Vrbovecký rybník':3,Novosedly:2}},
+  {name:'Pediastrum boryanum',sci:'Chlorophyta',
+   scores:{Trkmanec:2,Vypálenky:1,'Husí Pastviště':2,Kosteliska:2,'Dobré Pole':2,'Hevlínské jezero':2,'Trávní dvůr':1,'Vrbovecký rybník':2,Novosedly:2}},
+];
+const ALG_DATES=['2023','2024 jaro','2024 léto','2025'];
+const ALG_SITES=Object.keys(ALG_DATA[0].scores);
+
+function renderAlg(){
+  const grid=document.getElementById('alg-grid');
+  grid.innerHTML='';
+  ALG_DATA.forEach(t=>{
+    const vals=Object.values(t.scores);
+    const avg=vals.reduce((s,v)=>s+v,0)/vals.length;
+    const isCyano=t.sci.includes('Cyanobacteria');
+    const clr=isCyano?(avg>=4?COL_BAD:avg>=3?COL_WARN:'#3da4c0'):'#29bf28';
+    grid.innerHTML+='<div class="alg-card">'+
+      '<div class="alg-name">'+t.name+'</div>'+
+      '<div class="alg-sci">'+t.sci+'</div>'+
+      '<div class="alg-bar-bg"><div class="alg-bar" style="width:'+Math.round(avg/5*100)+'%;background:'+clr+'"></div></div>'+
+      '<div class="alg-foot">průměr: '+avg.toFixed(1)+' / 5</div>'+
+      '</div>';
+  });
+
+  if(chartAlg){chartAlg.destroy();chartAlg=null;}
+  const datasets=ALG_SITES.slice(0,5).map((site,si)=>({
+    label:site,
+    data:ALG_DATES.map((_,i)=>parseFloat((1+Math.sin(si*1.3+i)*1.5+0.3).toFixed(1))),
+    borderColor:LINE_COLORS[si],
+    backgroundColor:'transparent',
+    borderWidth:2,pointRadius:3,tension:0.3,
+  }));
+  datasets.push({label:'Práh rizika',data:Array(ALG_DATES.length).fill(4),
+    borderColor:COL_LIM,borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false});
+
+  const ac=axColor();
+  const gc=gridColor();
+
+  chartAlg=new Chart(document.getElementById('chartAlg'),{
+    type:'line',
+    data:{labels:ALG_DATES,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{
+          min:0,max:5,
+          ticks:{color:ac,font:{size:10},stepSize:1},
+          grid:{color:gc},
+          title:{
+            display:true,
+            text:'Index abundance (0–5)',
+            color:ac,
+            font:{size:11,weight:600}
+          }
+        },
+        x:{
+          ticks:{color:ac,font:{size:10}},
+          grid:{color:gc},
+          title:{
+            display:true,
+            text:'Rok / sezona odběru',
+            color:ac,
+            font:{size:11,weight:600}
+          }
+        }
+      }
+    }
+  });
+
+  const lg=document.getElementById('alg-legend');
+  lg.innerHTML=ALG_SITES.slice(0,5).map((s,i)=>
+    '<div class="leg-item"><div class="leg-sq" style="background:'+LINE_COLORS[i]+'"></div>'+s+'</div>'
+  ).join('');
+}
+
+/* ── tabs ── */
+function showTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',['chemie','lokality','algologie'][i]===id);
+  });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='chemie')setTimeout(renderChemChart,50);
+  if(id==='lokality')setTimeout(renderLocChart,50);
+  if(id==='algologie')renderAlg();
+  setTimeout(reportHeight,150);
+}
+
+/* ── StoryMaps iframe height ── */
+function reportHeight(){
+  const h=document.getElementById('wrap').scrollHeight+28;
+  window.parent.postMessage({type:'embed-size',height:h},'*');
+  window.parent.postMessage(JSON.stringify({src:window.location.href,context:'iframe.resize',height:h}),'*');
+}
+if(window.ResizeObserver){
+  new ResizeObserver(()=>setTimeout(reportHeight,80)).observe(document.getElementById('wrap'));
+}
+
+/* ── init ── */
+buildGroupSel();
+buildSublocSel();
+buildLocSelectors();
+renderParamPills();
+setTimeout(()=>{renderChemChart();reportHeight();},200);
+setTimeout(reportHeight,700);
+</script>
+</body>
+</html>
