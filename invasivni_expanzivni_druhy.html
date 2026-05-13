@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invazivní a expanzivní druhy</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: transparent; font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; overflow-x: hidden; }
+
+.wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 14px;
+}
+.wrap.cols-1 {
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.chart-box {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 4px 20px rgba(10,42,61,.09);
+}
+
+.chart-title {
+  font-size: .92rem;
+  font-weight: 700;
+  color: #1a5e7a;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+.chart-sub {
+  font-size: .73rem;
+  color: #36444f;
+  margin-bottom: 10px;
+}
+
+.legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .71rem;
+  color: #36444f;
+}
+.leg-sq {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="wrap">
+
+  <div class="chart-box">
+    <div class="chart-title">Invazní a expanzivní druhy na lokalitě</div>
+    <div class="chart-sub">Počet taxónů zaznamenaných v roce 2025</div>
+    <div class="legend">
+      <span class="leg"><span class="leg-sq" style="background:#dc2626;"></span>Invazní taxóny</span>
+      <span class="leg"><span class="leg-sq" style="background:#29bf28;"></span>Expanzivní taxóny</span>
+    </div>
+    <div class="canvas-wrap" id="wrap1">
+      <canvas id="chart1" role="img" aria-label="Skupinový sloupcový graf invazních a expanzivních taxónů na 10 lokalitách projektu LIFE in Salt Marshes">Dobré Pole: inv. 9, exp. 40 · Hevlínské jezero: 15/44 · Husí pastviště: 20/41 · Kosteliska: 14/36 · Novosedly: 14/43 · Trávní dvůr: 19/44 · Trkmanské louky: 10/24 · Trkmanec-Rybníčky: 10/33 · Vypálenky: 11/31 · Vrbovecký rybník: 10/41</canvas>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-title">Nejrozšířenější invazní druhy napříč lokalitami</div>
+    <div class="chart-sub">Počet lokalit (z 10), kde byl druh zaznamenán · 2025</div>
+    <div class="legend">
+      <span class="leg"><span class="leg-sq" style="background:#dc2626;"></span>Invazní taxón</span>
+    </div>
+    <div class="canvas-wrap" id="wrap2">
+      <canvas id="chart2" role="img" aria-label="Horizontální sloupcový graf nejrozšířenějších invazních druhů podle počtu lokalit výskytu">Acer negundo 10/10 · Cirsium arvense 10/10 · Solidago gigantea 9/10 · Lactuca serriola 9/10 · Bromus sterilis 8/10 · Conyza canadensis 8/10 · Arrhenatherum elatius 8/10 · Echinochloa crus-galli 8/10</canvas>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var localities = [
+  'Dobré Pole','Hevlínské jezero','Husí pastviště','Kosteliska','Novosedly',
+  'Trávní dvůr','Trkmanské louky','Trkmanec-Ryb.','Vypálenky','Vrbovecký ryb.'
+];
+var invData  = [9, 15, 20, 14, 14, 19, 10, 10, 11, 10];
+var expData  = [40, 44, 41, 36, 43, 44, 24, 33, 31, 41];
+
+var invSpecies = [
+  'Acer negundo (javor jasanolistý)',
+  'Cirsium arvense (pcháč rolní)',
+  'Solidago gigantea (zlatobýl obrovský)',
+  'Lactuca serriola (locika kompasová)',
+  'Bromus sterilis (sveřep neplodný)',
+  'Conyza canadensis (turanka kanadská)',
+  'Arrhenatherum elatius (ovsíř)',
+  'Echinochloa crus-galli (ježatka kuří noha)'
+];
+var invCounts = [10, 10, 9, 9, 8, 8, 8, 8];
+
+var wrap = document.getElementById('wrap');
+var chart1, chart2;
+
+function isSingleCol() {
+  return wrap.offsetWidth < 560;
+}
+
+function setHeights() {
+  var single = isSingleCol();
+  // chart1: grouped bar – height based on available width
+  var h1 = single ? 280 : Math.max(220, Math.round(wrap.offsetWidth * 0.38));
+  // chart2: horizontal bar – needs room for 8 labels
+  var h2 = single ? 300 : Math.max(240, invSpecies.length * 32 + 60);
+  document.getElementById('wrap1').style.height = h1 + 'px';
+  document.getElementById('wrap2').style.height = h2 + 'px';
+}
+
+function buildCharts() {
+  setHeights();
+
+  var tickSize   = isSingleCol() ? 10 : 9;
+  var tickSizeH  = isSingleCol() ? 10 : 10;
+
+  chart1 = new Chart(document.getElementById('chart1'), {
+    type: 'bar',
+    data: {
+      labels: localities,
+      datasets: [
+        { label: 'Invazní taxóny',    data: invData, backgroundColor: '#dc2626', borderRadius: 3 },
+        { label: 'Expanzivní taxóny', data: expData, backgroundColor: '#29bf28', borderRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: {
+          ticks: { font: { size: tickSize }, maxRotation: 40, autoSkip: false },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: tickSize } },
+          grid: { color: 'rgba(90,112,128,0.1)' }
+        }
+      }
+    }
+  });
+
+  chart2 = new Chart(document.getElementById('chart2'), {
+    type: 'bar',
+    data: {
+      labels: invSpecies,
+      datasets: [{ label: 'Počet lokalit', data: invCounts, backgroundColor: '#dc2626', borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          min: 0, max: 10,
+          ticks: { stepSize: 2, font: { size: tickSize } },
+          grid: { color: 'rgba(90,112,128,0.1)' }
+        },
+        y: {
+          ticks: { font: { size: tickSizeH } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function applyLayout(width) {
+  wrap.classList.toggle('cols-1', width < 560);
+}
+
+function reportHeight() {
+  var h = document.body.scrollHeight;
+  window.parent.postMessage({ type: 'embed-size', height: h }, '*');
+  window.parent.postMessage(
+    JSON.stringify({ src: window.location.href, context: 'iframe.resize', height: h }), '*'
+  );
+}
+
+function rebuild() {
+  applyLayout(wrap.offsetWidth);
+  if (chart1) { chart1.destroy(); chart2.destroy(); }
+  buildCharts();
+  setTimeout(reportHeight, 100);
+}
+
+if (window.ResizeObserver) {
+  new ResizeObserver(function(entries) {
+    for (var e of entries) { rebuild(); }
+  }).observe(wrap);
+} else {
+  window.addEventListener('resize', rebuild);
+}
+
+window.addEventListener('load', function() {
+  rebuild();
+  setTimeout(reportHeight, 400);
+  setTimeout(reportHeight, 900);
+});
+</script>
+</body>
+</html>
